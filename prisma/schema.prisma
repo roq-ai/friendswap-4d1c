@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model friend {
+  id                          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                     String   @db.Uuid
+  friend_id                   String   @db.Uuid
+  created_at                  DateTime @default(now()) @db.Timestamp(6)
+  updated_at                  DateTime @default(now()) @db.Timestamp(6)
+  user_friend_friend_idTouser user     @relation("friend_friend_idTouser", fields: [friend_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_friend_user_idTouser   user     @relation("friend_user_idTouser", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model review {
+  id                                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewer_id                         String   @db.Uuid
+  reviewed_id                         String   @db.Uuid
+  rating                              Int
+  comment                             String?  @db.VarChar(255)
+  created_at                          DateTime @default(now()) @db.Timestamp(6)
+  updated_at                          DateTime @default(now()) @db.Timestamp(6)
+  swapper_review_reviewed_idToswapper swapper  @relation("review_reviewed_idToswapper", fields: [reviewed_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  swapper_review_reviewer_idToswapper swapper  @relation("review_reviewer_idToswapper", fields: [reviewer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model swap_request {
+  id                                         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requester_id                               String   @db.Uuid
+  requested_id                               String   @db.Uuid
+  status                                     String   @db.VarChar(255)
+  created_at                                 DateTime @default(now()) @db.Timestamp(6)
+  updated_at                                 DateTime @default(now()) @db.Timestamp(6)
+  swapper_swap_request_requested_idToswapper swapper  @relation("swap_request_requested_idToswapper", fields: [requested_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  swapper_swap_request_requester_idToswapper swapper  @relation("swap_request_requester_idToswapper", fields: [requester_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model swapper {
+  id                                              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description                                     String?        @db.VarChar(255)
+  image                                           String?        @db.VarChar(255)
+  name                                            String         @db.VarChar(255)
+  created_at                                      DateTime       @default(now()) @db.Timestamp(6)
+  updated_at                                      DateTime       @default(now()) @db.Timestamp(6)
+  user_id                                         String         @db.Uuid
+  tenant_id                                       String         @db.VarChar(255)
+  review_review_reviewed_idToswapper              review[]       @relation("review_reviewed_idToswapper")
+  review_review_reviewer_idToswapper              review[]       @relation("review_reviewer_idToswapper")
+  swap_request_swap_request_requested_idToswapper swap_request[] @relation("swap_request_requested_idToswapper")
+  swap_request_swap_request_requester_idToswapper swap_request[] @relation("swap_request_requester_idToswapper")
+  user                                            user           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                         String    @unique @db.VarChar(255)
+  firstName                     String?   @db.VarChar(255)
+  lastName                      String?   @db.VarChar(255)
+  roq_user_id                   String    @db.VarChar(255)
+  tenant_id                     String    @db.VarChar(255)
+  created_at                    DateTime  @default(now()) @db.Timestamp(6)
+  updated_at                    DateTime  @default(now()) @db.Timestamp(6)
+  friend_friend_friend_idTouser friend[]  @relation("friend_friend_idTouser")
+  friend_friend_user_idTouser   friend[]  @relation("friend_user_idTouser")
+  swapper                       swapper[]
+}
